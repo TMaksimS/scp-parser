@@ -3,32 +3,39 @@ package postgresql
 import (
 	"context"
 	"fmt"
-	"os"
+	repeatable "scp-parser/internal/repository/utils"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func UrlDb() string {
-	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", os.Getenv("DBUser"), os.Getenv("DBPass"), os.Getenv("DBHost"), os.Getenv("DBPort"), os.Getenv("DBName"))
+type StorageConfig struct {
+	DBUser     string
+	DBPass     string
+	DBHost     string
+	DBPort     string
+	DBName     string
+	MaxAttemps int
+}
+
+func (c *StorageConfig) LinkDB() string {
+	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", c.DBUser, c.DBPass, c.DBHost, c.DBPort, c.DBName)
 	return url
 }
 
-func CreateTable() {
-	url := UrlDb()
-	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, url)
+func NewClient(ctx context.Context, c StorageConfig) (conn *pgx.Conn, err error) {
+	dsn := c.LinkDB()
+	err = repeatable.DoWithTries(func() error {
+		ctx, cancel := context.WithTimeout(ctx, time.Duration(c.MaxAttemps)*time.Second)
+		defer cancel()
+		conn, err = pgx.Connect(ctx, dsn)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.MaxAttemps, time.Duration(c.MaxAttemps)*time.Second)
 	if err != nil {
-		fmt.Errorf("error when connection to db: %v", err)
+		fmt.Println("error do with tries db")
 	}
-	defer conn.Close(ctx)
-	err = conn.Ping(ctx)
-	if err != nil {
-		fmt.Errorf("Ошибка при проверке подключения: %v", err)
-	}
-	// var name string
-	err = conn.QueryRow(ctx, "SELECT * FROM pg_catalog.pg_tables").Scan()
-	if err != nil {
-		fmt.Println("error select: %v", err)
-	}
-	// fmt.Println(name)
+	return conn, nil
 }
