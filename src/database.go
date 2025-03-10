@@ -9,17 +9,21 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func UrlDb() string {
+func init() {
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Errorf("Failed load .env")
+		fmt.Println("Error loading .env file")
 	}
+}
+
+func UrlDb() string {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", os.Getenv("DBUser"), os.Getenv("DBPass"), os.Getenv("DBHost"), os.Getenv("DBPort"), os.Getenv("DBName"))
 	return url
 }
 
 func CreateTable() {
 	url := UrlDb()
+	fmt.Println(url)
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, url)
 	if err != nil {
