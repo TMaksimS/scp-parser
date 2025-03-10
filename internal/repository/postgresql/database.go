@@ -1,4 +1,4 @@
-package src
+package postgresql
 
 import (
 	"context"
@@ -23,7 +23,6 @@ func UrlDb() string {
 
 func CreateTable() {
 	url := UrlDb()
-	fmt.Println(url)
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, url)
 	if err != nil {

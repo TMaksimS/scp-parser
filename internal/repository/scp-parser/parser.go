@@ -1,4 +1,4 @@
-package src
+package scpClient
 
 import (
 	"fmt"

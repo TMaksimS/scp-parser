@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
-	scp_parser "scp-parser/src"
+	"scp-parser/internal/repository/postgresql"
+	scpClient "scp-parser/internal/repository/scp-parser"
 )
 
 func main() {
-	scp_parser.CreateTable()
+	postgresql.CreateTable()
 	data := []string{"/scp-1122", "/scp-001", "/scp-002"}
 	// arraySCP := scp_parser.ParseGetListSCP()[0:2]
 	for _, item := range data {
-		unit := scp_parser.ParseGetCurrentSCP(item)
+
+		unit := scpClient.ParseGetCurrentSCP(item)
 		fmt.Println(unit)
 	}
 	// res := scp_parser.ParseGetCurrentSCP(data[0])
