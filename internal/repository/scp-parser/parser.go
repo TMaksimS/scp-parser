@@ -1,4 +1,4 @@
-package scpClient
+package scpclient
 
 import (
 	"fmt"
@@ -10,17 +10,26 @@ import (
 	"golang.org/x/net/html"
 )
 
-func ParseGetListSCP() []string {
+type ScpClient struct {
+	URL     string
+	Headers map[string]string
+	Client  *http.Client
+}
+
+func (client *ScpClient) ParseGetListSCP() []string {
 	var result []string
 	for i := 1; i < 10; i++ {
 		fmt.Println(i)
 		var url string
 		if i == 1 {
-			url = "https://scpfoundation.net/scp-series"
+			url = client.URL + "/scp-series"
 		} else {
-			url = "https://scpfoundation.net/scp-series-" + strconv.Itoa(i)
+			url = client.URL + "/scp-series-" + strconv.Itoa(i)
 		}
-		response, err := http.Get(url)
+		response, err := client.Client.Get(url)
+		for key, value := range client.Headers {
+			response.Header.Set(key, value)
+		}
 		if err != nil {
 			fmt.Errorf("some error request: %v", err)
 		}
@@ -70,9 +79,9 @@ type SCPUnit struct {
 	Link        string
 }
 
-func ParseGetCurrentSCP(data string) SCPUnit {
+func (client *ScpClient) ParseGetCurrentSCP(data string) SCPUnit {
 	fmt.Println("Парсинг обьекта %v", data[1:])
-	url := "https://scpfoundation.net" + data
+	url := client.URL + data
 	unit := SCPUnit{
 		Name:        "",
 		Class:       "",
@@ -83,9 +92,19 @@ func ParseGetCurrentSCP(data string) SCPUnit {
 		SpecialCOD:  "",
 		Link:        url,
 	}
-	response, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("erroe created req: %v", err)
+	}
+	for key, value := range client.Headers {
+		req.Header.Set(key, value)
+	}
 	if err != nil {
 		fmt.Errorf("some error request: %v", err)
+	}
+	response, err := client.Client.Do(req)
+	if err != nil {
+		fmt.Println("error sending req: %v", err)
 	}
 	bytesData, err := io.ReadAll(response.Body)
 	defer response.Body.Close()

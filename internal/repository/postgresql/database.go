@@ -6,15 +6,7 @@ import (
 	"os"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
 )
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Error loading .env file")
-	}
-}
 
 func UrlDb() string {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", os.Getenv("DBUser"), os.Getenv("DBPass"), os.Getenv("DBHost"), os.Getenv("DBPort"), os.Getenv("DBName"))
