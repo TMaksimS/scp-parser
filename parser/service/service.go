@@ -1,11 +1,15 @@
-package scpclient
+package service
 
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
+
+	"scp-parser/pkg/config"
 
 	"golang.org/x/net/html"
 )
@@ -16,10 +20,23 @@ type ScpClient struct {
 	Client  *http.Client
 }
 
+func NewSCPClient(cfg *config.SCPConfig) ScpClient {
+	return ScpClient{
+		URL: cfg.URL,
+		Headers: map[string]string{
+			"User-Agent": cfg.UserAgent,
+			"Accept":     "application/json",
+		},
+		Client: &http.Client{
+			Timeout: time.Duration(cfg.Timeout) * time.Second,
+		},
+	}
+}
+
 func (client *ScpClient) ParseGetListSCP() []string {
 	var result []string
 	for i := 1; i < 10; i++ {
-		fmt.Println(i)
+		slog.Info(fmt.Sprintf("Parsing list SCPUnits page: [%d]", i))
 		var url string
 		if i == 1 {
 			url = client.URL + "/scp-series"
@@ -31,14 +48,14 @@ func (client *ScpClient) ParseGetListSCP() []string {
 			response.Header.Set(key, value)
 		}
 		if err != nil {
-			fmt.Errorf("some error request: %v", err)
+			slog.Error(fmt.Sprintf("some error request: %v", err))
 		}
 		defer response.Body.Close()
 		bytesData, err := io.ReadAll(response.Body)
 		htmlString := string(bytesData)
 		doc, err := html.Parse(strings.NewReader(htmlString))
 		if err != nil {
-			fmt.Errorf("some error htlm parse, %v", err)
+			slog.Error(fmt.Sprintf("some error htlm parse, %v", err))
 		}
 		var f func(*html.Node)
 		f = func(n *html.Node) {
@@ -80,7 +97,7 @@ type SCPUnit struct {
 }
 
 func (client *ScpClient) ParseGetCurrentSCP(data string) SCPUnit {
-	fmt.Println("Парсинг обьекта %v", data[1:])
+	slog.Info(fmt.Sprintf("Parse object %v\n", data[1:]))
 	url := client.URL + data
 	unit := SCPUnit{
 		Name:        "",
@@ -94,24 +111,24 @@ func (client *ScpClient) ParseGetCurrentSCP(data string) SCPUnit {
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println("erroe created req: %v", err)
+		slog.Error(fmt.Sprintf("error created req: %v", err))
 	}
 	for key, value := range client.Headers {
 		req.Header.Set(key, value)
 	}
 	if err != nil {
-		fmt.Errorf("some error request: %v", err)
+		slog.Error(fmt.Sprintf("some error request: %v", err))
 	}
 	response, err := client.Client.Do(req)
 	if err != nil {
-		fmt.Println("error sending req: %v", err)
+		slog.Error(fmt.Sprintf("error sending req: %v", err))
 	}
 	bytesData, err := io.ReadAll(response.Body)
 	defer response.Body.Close()
 	htmlString := string(bytesData)
 	doc, err := html.Parse(strings.NewReader(htmlString))
 	if err != nil {
-		fmt.Errorf("some error htlm parse, %v", err)
+		slog.Error(fmt.Sprintf("some error htlm parse, %v", err))
 	}
 	var f func(*html.Node)
 	f = func(n *html.Node) {
@@ -126,7 +143,7 @@ func (client *ScpClient) ParseGetCurrentSCP(data string) SCPUnit {
 						}
 						if attr.Val == "page-content" {
 							if n.FirstChild != nil {
-								fmt.Println(n.FirstChild.Data)
+								slog.Info(n.FirstChild.Data)
 							}
 						}
 					}
@@ -148,7 +165,7 @@ func (client *ScpClient) ParseGetCurrentSCP(data string) SCPUnit {
 						case "тематика":
 							unit.Subject = append(unit.Subject, strings.Split(value, ":")[1])
 						default:
-							fmt.Println(strings.Split(strings.Split(attr.Val, "/system:page-tags/tag/")[1], "#pages")[0])
+							slog.Warn(fmt.Sprintf(strings.Split(strings.Split(attr.Val, "/system:page-tags/tag/")[1], "#pages")[0]))
 						}
 					}
 				}
