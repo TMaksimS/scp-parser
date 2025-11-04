@@ -23,9 +23,15 @@ type PGConfig struct {
 	MaxAttemps int
 }
 
+type APIConfig struct {
+	Host string
+	Port string
+}
+
 type Config struct {
 	SCP SCPConfig
 	DB  PGConfig
+	API APIConfig
 }
 
 func Load() *Config {
@@ -45,6 +51,10 @@ func Load() *Config {
 			DBPort:     getEnv("DBPort", ""),
 			DBName:     getEnv("DBName", ""),
 			MaxAttemps: getEnvInt("MaxAttemps", 5),
+		},
+		API: APIConfig{
+			Host: getEnv("ApiHost", "localhost"),
+			Port: getEnv("ApiPort", "8080"),
 		},
 	}
 }

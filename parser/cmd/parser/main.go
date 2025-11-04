@@ -71,7 +71,7 @@ func run(ctx context.Context, cfg *config.Config, workers int) error {
 					return
 				default:
 					rawData := client.ParseGetCurrentSCP(u)
-					err = repo.Create(ctx, rawData)
+					_, err = repo.Create(ctx, rawData)
 					if err != nil {
 						slog.Error("Error when trying save unit to DB")
 						continue

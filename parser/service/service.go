@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"scp-parser/pkg/config"
+	"scp-parser/server/domain"
 
 	"golang.org/x/net/html"
 )
@@ -83,23 +84,10 @@ func (client *ScpClient) ParseGetListSCP() []string {
 	return result
 }
 
-type SCPUnit struct {
-	Name        string
-	Class       string
-	Structure   string
-	Filial      string
-	Anomaly     string
-	Subject     []string
-	Discription string
-	SpecialCOD  string
-	Property    []string
-	Link        string
-}
-
-func (client *ScpClient) ParseGetCurrentSCP(data string) SCPUnit {
+func (client *ScpClient) ParseGetCurrentSCP(data string) domain.CreateSCPUnit {
 	slog.Info(fmt.Sprintf("Parse object %v\n", data[1:]))
 	url := client.URL + data
-	unit := SCPUnit{
+	unit := domain.CreateSCPUnit{
 		Name:        "",
 		Class:       "",
 		Structure:   "",
