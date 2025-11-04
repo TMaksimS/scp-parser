@@ -46,7 +46,7 @@ func NewSCPService(ctx context.Context, cfg *config.Config) (*SCPService, error)
 
 func (r *SCPService) GetByID(ctx context.Context, id int) (*SCPUnitDTO, error) {
 	if id <= 0 {
-		slog.Error("Invalid ID: %d", id)
+		slog.Error(fmt.Sprintf("Invalid ID: %d", id))
 		return nil, domain.ErrBadParamInput
 	}
 
@@ -103,7 +103,7 @@ func (r *SCPService) UpdateSCP(ctx context.Context, dto *domain.CreateSCPUnit, i
 
 func (r *SCPService) DeleteSCP(ctx context.Context, id int) error {
 	if id < 0 {
-		slog.Error("Ivalid ID: %d", id)
+		slog.Error(fmt.Sprintf("Ivalid ID: %d", id))
 		return domain.ErrBadParamInput
 	}
 

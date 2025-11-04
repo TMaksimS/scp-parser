@@ -19,7 +19,7 @@ func main() {
 	slog.Info("Config has been loaded")
 	clientDB, err := cmd.NewClient(ctx, &config.DB)
 	if err != nil {
-		slog.Error("Some error when creating client for PG\n: %v", err)
+		slog.Error(fmt.Sprintf("Some error when creating client for PG\n: %v", err))
 	}
 	cmd.CreateDB(ctx, clientDB)
 	defer clientDB.Close(ctx)
@@ -27,7 +27,7 @@ func main() {
 	defer cancel()
 	err = run(timeOutCtx, config, 5)
 	if err != nil {
-		slog.Error("Error: ", err)
+		slog.Error(fmt.Sprintf("Error: %v", err))
 		return
 	}
 }
@@ -39,8 +39,8 @@ func run(ctx context.Context, cfg *config.Config, workers int) error {
 	namesCh := make(chan string)
 	wg := &sync.WaitGroup{}
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		defer close(namesCh)
 
