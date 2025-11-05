@@ -30,6 +30,18 @@ type SCPUnitDTO struct {
 	Link        *string  `json:"link"`
 }
 
+type SCPListResponse struct {
+	Data       []*SCPUnitDTO `json:"data"`
+	Pagination *Pagination   `json:"pagination"`
+}
+
+type Pagination struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+	Total int `json:"total"`
+	Pages int `json:"pages"`
+}
+
 type SCPService struct {
 	repo *repository.SCPRepo
 }
@@ -67,11 +79,12 @@ func (r *SCPService) GetByID(ctx context.Context, id int) (*SCPUnitDTO, error) {
 	return dto, nil
 }
 
-func (r *SCPService) GetListSCP(ctx context.Context, limit, offset int) ([]*SCPUnitDTO, error) {
-	units, err := r.repo.GetListSCP(ctx, limit, offset)
+func (r *SCPService) GetListSCP(ctx context.Context, limit, offset int) (*SCPListResponse, error) {
+	units, count, err := r.repo.GetListSCP(ctx, limit, offset)
 
 	if err != nil {
 		slog.Error(fmt.Sprintf("Error when Getting SCP units with limit: %d, offset: %d", limit, offset))
+		slog.Error(fmt.Sprintf("%v", err))
 		return nil, domain.ErrInternalServerError
 	}
 
@@ -81,7 +94,23 @@ func (r *SCPService) GetListSCP(ctx context.Context, limit, offset int) ([]*SCPU
 		dtos[i] = r.ConvertSCPUnitDBToSCPUnitDTO(unit)
 	}
 
-	return dtos, nil
+	response := &SCPListResponse{
+		Data: dtos,
+		Pagination: &Pagination{
+			Page:  offset,
+			Limit: limit,
+			Total: count,
+			Pages: func(limit, count int) int {
+				if count%limit >= 1 {
+					return count/limit + 1
+				} else {
+					return count / limit
+				}
+			}(limit, count),
+		},
+	}
+	slog.Warn(fmt.Sprintf("%v", response))
+	return response, nil
 }
 
 func (r *SCPService) UpdateSCP(ctx context.Context, dto *domain.CreateSCPUnit, id int) (*SCPUnitDTO, error) {

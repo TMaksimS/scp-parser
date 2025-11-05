@@ -108,12 +108,25 @@ func (r *SCPRepo) GetByID(ctx context.Context, id int) (*GetSCPUnitDB, error) {
 	return unit, nil
 }
 
-func (r *SCPRepo) GetListSCP(ctx context.Context, limit, offset int) ([]*GetSCPUnitDB, error) {
+func (r *SCPRepo) GetListSCP(ctx context.Context, limit, offset int) ([]*GetSCPUnitDB, int, error) {
 	q := "SELECT id, name, class, structure, filial, anomaly, subject, discription, specialCOD, property, link FROM scpunits ORDER BY name LIMIT $1 OFFSET $2"
 
-	rows, err := r.DB.Query(ctx, q, limit, offset*limit)
+	var totalCount int
+
+	qTotal := "SELECT count(*) FROM scpunits"
+	err := r.DB.QueryRow(ctx, qTotal).Scan(&totalCount)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get SCP list: %v", err)
+		return nil, 0, fmt.Errorf("failed to get total count: %w", err)
+	}
+
+	tx, err := r.DB.Begin(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	rows, err := tx.Query(ctx, q, limit, offset*limit)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to get SCP list: %v", err)
 	}
 
 	defer rows.Close()
@@ -124,13 +137,13 @@ func (r *SCPRepo) GetListSCP(ctx context.Context, limit, offset int) ([]*GetSCPU
 		unit, err := r.scanSCPRow(rows)
 
 		if err != nil {
-			return nil, err
+			return nil, totalCount, err
 		}
 
 		units = append(units, unit)
 	}
 
-	return units, nil
+	return units, totalCount, nil
 }
 
 func (r *SCPRepo) DeleteByID(ctx context.Context, id int) error {
