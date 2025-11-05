@@ -59,6 +59,17 @@ func (h *SCPHandler) Routes() chi.Router {
 	return r
 }
 
+// ListSCP list all existing units
+// @Summary Get list of SCP units
+// @Description Get paginated list of SCP units
+// @Tags SCP
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit the number of results" default(50) minimum(1) maximum(100)
+// @Param offset query int false "Offset for pagination" default(0) minimum(0)
+// @Success 200 {object} service.SCPUnitDTO
+// @Failure 500
+// @Router /scp/ [get]
 func (h *SCPHandler) GetSCPlist(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
@@ -88,25 +99,17 @@ func (h *SCPHandler) GetSCPlist(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func (h *SCPHandler) GetSCP(w http.ResponseWriter, r *http.Request) {
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		http.Error(w, "Invalid SCP ID", http.StatusBadRequest)
-		return
-	}
-
-	scp, err := h.service.GetByID(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), getStatusCode(err))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(scp)
-
-}
-
+// CreateSCP Create new SCP unit
+// @Summary Create SCP unit
+// @Description Create a new SCP unit
+// @Tags SCP
+// @Accept json
+// @Produce json
+// @Param request body domain.CreateSCPUnit true "SCP data"
+// @Success 200 {object} service.SCPUnitDTO
+// @Failure 400
+// @Failure 500
+// @Router /scp/ [post]
 func (h *SCPHandler) CreateSCP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -128,6 +131,50 @@ func (h *SCPHandler) CreateSCP(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// ListSCP current SCP
+// @Summary Get SCP unit
+// @Description Get SCP unit
+// @Tags SCP
+// @Accept json
+// @Produce json
+// @Param id path int true "SCP ID"
+// @Success 200 {object} service.SCPUnitDTO
+// @Failure 400
+// @Failure 404
+// @Failure 500
+// @Router /scp/{id} [get]
+func (h *SCPHandler) GetSCP(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid SCP ID", http.StatusBadRequest)
+		return
+	}
+
+	scp, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), getStatusCode(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(scp)
+
+}
+
+// UpdateSCP Update SCP unit
+// @Summary Update SCP unit
+// @Description Update SCP unit
+// @Tags SCP
+// @Accept json
+// @Produce json
+// @Param id path int true "SCP ID"
+// @Param request body domain.CreateSCPUnit true "SCP data"
+// @Success 200 {object} service.SCPUnitDTO
+// @Failure 400
+// @Failure 404
+// @Failure 500
+// @Router /scp/{id} [put]
 func (h *SCPHandler) UpdateSCP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -155,6 +202,17 @@ func (h *SCPHandler) UpdateSCP(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// DeleteSCP Delete SCP unit
+// @Summary Delete SCP unit
+// @Description Delete SCP unit
+// @Tags SCP
+// @Accept json
+// @Produce json
+// @Param id path int true "SCP ID"
+// @Success 204
+// @Failure 404
+// @Failure 500
+// @Router /scp/{id} [delete]
 func (h *SCPHandler) DeleteSCP(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)

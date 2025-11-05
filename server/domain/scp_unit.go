@@ -1,5 +1,6 @@
 package domain
 
+// @Description SCP Unit information for Creating
 type CreateSCPUnit struct {
 	Name        string   `json:"name"`
 	Class       string   `json:"class"`

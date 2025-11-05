@@ -5,13 +5,23 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	_ "scp-parser/docs"
 	"scp-parser/pkg/config"
 	"scp-parser/server/internal/handlers"
 	"scp-parser/server/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title SCP Foundation API
+// @version 1.0
+// @description API for managing SCP Foundation database
+// @contact.name API Support
+// @contact.email test_example@gmail.com
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http
 func main() {
 	cfg := config.Load()
 	ctx := context.Background()
@@ -24,6 +34,10 @@ func main() {
 	}
 
 	r.Use(middleware.Logger)
+
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

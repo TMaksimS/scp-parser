@@ -14,6 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// SCPUnitDTO represents SCP unit data transfer object
+// @Description SCP Unit information
 type SCPUnitDTO struct {
 	ID          int      `json:"id"`
 	Name        *string  `json:"name"`
