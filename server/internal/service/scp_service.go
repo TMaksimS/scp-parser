@@ -66,6 +66,9 @@ func (r *SCPService) GetByID(ctx context.Context, id int) (*SCPUnitDTO, error) {
 
 	scpUnit, err := r.repo.GetByID(ctx, id)
 	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result") {
+			return nil, domain.ErrNotFound
+		}
 		slog.Error(fmt.Sprintf("Failed when get SCPunit from DB: %d", id))
 		return nil, domain.ErrInternalServerError
 	}
@@ -140,8 +143,12 @@ func (r *SCPService) DeleteSCP(ctx context.Context, id int) error {
 
 	err := r.repo.DeleteByID(ctx, id)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%v", err))
-		return domain.ErrNotFound
+		fmt.Println(err)
+		if strings.Contains(err.Error(), "no rows in result") {
+			return domain.ErrNotFound
+		}
+		slog.Error(fmt.Sprintf("Error when delete SCP: %v", err))
+		return domain.ErrInternalServerError
 	}
 
 	return nil

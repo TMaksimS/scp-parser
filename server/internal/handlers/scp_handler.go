@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -111,14 +113,15 @@ func (h *SCPHandler) GetSCPlist(w http.ResponseWriter, r *http.Request) {
 // @Failure 500
 // @Router /scp/ [post]
 func (h *SCPHandler) CreateSCP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	var body domain.CreateSCPUnit
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error": "invalid JSON"}`, getStatusCode(domain.ErrBadParamInput))
+		slog.Error(fmt.Sprintf("Error when decode SCP: %v", err))
+		http.Error(w, domain.ErrBadParamInput.Error(), getStatusCode(domain.ErrBadParamInput))
 		return
 	}
+
+	// TODO validate body to avoid 500
 
 	createdSCP, err := h.service.CreateSCP(r.Context(), &body)
 
@@ -127,6 +130,7 @@ func (h *SCPHandler) CreateSCP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(createdSCP)
 
 }
@@ -176,8 +180,6 @@ func (h *SCPHandler) GetSCP(w http.ResponseWriter, r *http.Request) {
 // @Failure 500
 // @Router /scp/{id} [put]
 func (h *SCPHandler) UpdateSCP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -188,9 +190,11 @@ func (h *SCPHandler) UpdateSCP(w http.ResponseWriter, r *http.Request) {
 	var body domain.CreateSCPUnit
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, `{"error": "invalid JSON"}`, getStatusCode(domain.ErrBadParamInput))
+		slog.Error(fmt.Sprintf("Error when decode SCP: %v", err))
+		http.Error(w, domain.ErrBadParamInput.Error(), getStatusCode(domain.ErrBadParamInput))
 		return
 	}
+	// TODO validate body to avoid 500
 
 	updatedSCP, err := h.service.UpdateSCP(r.Context(), &body, id)
 	if err != nil {
@@ -198,6 +202,7 @@ func (h *SCPHandler) UpdateSCP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedSCP)
 
 }
@@ -226,6 +231,7 @@ func (h *SCPHandler) DeleteSCP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), getStatusCode(err))
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode("OK")
 

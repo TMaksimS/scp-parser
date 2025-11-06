@@ -156,7 +156,7 @@ func (r *SCPRepo) DeleteByID(ctx context.Context, id int) error {
 
 	rowsAffected := result.RowsAffected()
 	if rowsAffected == 0 {
-		return fmt.Errorf("SCP with ID %d not found", id)
+		return fmt.Errorf("no rows in result SCP with ID %d not found", id)
 	}
 
 	return nil
